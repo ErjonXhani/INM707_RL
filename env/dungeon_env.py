@@ -1,0 +1,154 @@
+import gymnasium as gym
+from gymnasium import spaces
+import numpy as np
+import random
+
+
+class DungeonEnv(gym.Env):
+    def __init__(self):
+        super().__init__()
+
+        self.grid_size = 6
+        self.max_steps = 50
+
+        # 0 up, 1 down, 2 left, 3 right, 4 shoot up, 5 shoot down, 6 shoot left, 7 shoot right
+        self.action_space = spaces.Discrete(8)
+
+        # State: agent_x, agent_y, enemy1_alive, enemy2_alive
+        self.observation_space = spaces.Box(
+            low=0,
+            high=6,
+            shape=(4,),
+            dtype=np.int32
+        )
+
+        self.obstacles = [(1, 1), (1, 2), (3, 3)]
+        self.enemy_positions = [(4, 4), (2, 5)]
+
+        self.reset()
+
+    def reset(self, seed=None, options=None):
+        super().reset(seed=seed)
+
+        possible_spawns = [
+            (x, y)
+            for x in range(self.grid_size)
+            for y in range(self.grid_size)
+            if (x, y) not in self.obstacles and (x, y) not in self.enemy_positions
+        ]
+
+        self.agent_pos = random.choice(possible_spawns)
+        self.enemies_alive = [1, 1]
+        self.steps = 0
+
+        return self._get_state(), {}
+
+    def _get_state(self):
+        return np.array([
+            self.agent_pos[0],
+            self.agent_pos[1],
+            self.enemies_alive[0],
+            self.enemies_alive[1]
+        ], dtype=np.int32)
+
+    def step(self, action):
+        self.steps += 1
+        reward = -1
+        done = False
+
+        if action in [0, 1, 2, 3]:
+            reward += self._move(action)
+
+        elif action in [4, 5, 6, 7]:
+            reward += self._shoot(action)
+        
+        # death condition
+
+        if self.agent_pos in self.enemy_positions:
+            enemy_index = self.enemy_positions.index(self.agent_pos)
+
+            if self.enemies_alive[enemy_index] == 1:
+                reward -= 100
+                done = True
+
+        if sum(self.enemies_alive) == 0:
+            reward += 100
+            done = True
+
+        if self.steps >= self.max_steps:
+            done = True
+
+        return self._get_state(), reward, done, False, {}
+
+    def _move(self, action):
+        x, y = self.agent_pos
+
+        if action == 0:
+            y -= 1
+        elif action == 1:
+            y += 1
+        elif action == 2:
+            x -= 1
+        elif action == 3:
+            x += 1
+
+        new_pos = (x, y)
+
+        if x < 0 or x >= self.grid_size or y < 0 or y >= self.grid_size:
+            return -10
+
+        if new_pos in self.obstacles:
+            return -10
+
+        self.agent_pos = new_pos
+        return 0
+
+    def _shoot(self, action):
+        reward = -2
+
+        ax, ay = self.agent_pos
+
+        for i, enemy_pos in enumerate(self.enemy_positions):
+            if self.enemies_alive[i] == 0:
+                continue
+
+            ex, ey = enemy_pos
+
+            if action == 4 and ax == ex and ey < ay:
+                self.enemies_alive[i] = 0
+                reward += 30
+
+            elif action == 5 and ax == ex and ey > ay:
+                self.enemies_alive[i] = 0
+                reward += 30
+
+            elif action == 6 and ay == ey and ex < ax:
+                self.enemies_alive[i] = 0
+                reward += 30
+
+            elif action == 7 and ay == ey and ex > ax:
+                self.enemies_alive[i] = 0
+                reward += 30
+
+        return reward
+
+    def render(self):
+        for y in range(self.grid_size):
+            row = ""
+            for x in range(self.grid_size):
+                pos = (x, y)
+
+                if pos == self.agent_pos:
+                    row += "A "
+                elif pos in self.obstacles:
+                    row += "X "
+                elif pos in self.enemy_positions:
+                    enemy_index = self.enemy_positions.index(pos)
+                    if self.enemies_alive[enemy_index] == 1:
+                        row += "E "
+                    else:
+                        row += ". "
+                else:
+                    row += ". "
+            print(row)
+        print()
