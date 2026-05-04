@@ -71,19 +71,52 @@ def draw_bullet(action):
         return
 
     ax, ay = env.agent_pos
-    bx = ax * CELL_SIZE + CELL_SIZE // 2
-    by = ay * CELL_SIZE + CELL_SIZE // 2
 
-    if action == 4:
-        end = (bx, 0)
-    elif action == 5:
-        end = (bx, HEIGHT)
-    elif action == 6:
-        end = (0, by)
-    else:
-        end = (WIDTH, by)
+    if action == 4:      # up
+        dx, dy = 0, -1
+    elif action == 5:    # down
+        dx, dy = 0, 1
+    elif action == 6:    # left
+        dx, dy = -1, 0
+    else:                # right
+        dx, dy = 1, 0
 
-    pygame.draw.line(screen, (255, 200, 0), (bx, by), end, 5)
+    x = ax + dx
+    y = ay + dy
+
+    start = (
+        ax * CELL_SIZE + CELL_SIZE // 2,
+        ay * CELL_SIZE + CELL_SIZE // 2
+    )
+
+    end = start
+
+    while 0 <= x < GRID_SIZE and 0 <= y < GRID_SIZE:
+        current_pos = (x, y)
+
+        # stop bullet visually at obstacle
+        if current_pos in env.obstacles:
+            end = (
+                x * CELL_SIZE + CELL_SIZE // 2,
+                y * CELL_SIZE + CELL_SIZE // 2
+            )
+            break
+
+        end = (
+            x * CELL_SIZE + CELL_SIZE // 2,
+            y * CELL_SIZE + CELL_SIZE // 2
+        )
+
+        # stop visually if it hits a living enemy
+        if current_pos in env.enemy_positions:
+            enemy_index = env.enemy_positions.index(current_pos)
+            if env.enemies_alive[enemy_index] == 1:
+                break
+
+        x += dx
+        y += dy
+
+    pygame.draw.line(screen, (255, 200, 0), start, end, 5)
 
 
 def draw_grid():

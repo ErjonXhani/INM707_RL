@@ -108,27 +108,38 @@ class DungeonEnv(gym.Env):
 
         ax, ay = self.agent_pos
 
-        for i, enemy_pos in enumerate(self.enemy_positions):
-            if self.enemies_alive[i] == 0:
-                continue
+        if action == 4:      # shoot up
+            dx, dy = 0, -1
+        elif action == 5:    # shoot down
+            dx, dy = 0, 1
+        elif action == 6:    # shoot left
+            dx, dy = -1, 0
+        elif action == 7:    # shoot right
+            dx, dy = 1, 0
+        else:
+            return reward
 
-            ex, ey = enemy_pos
+        x = ax + dx
+        y = ay + dy
 
-            if action == 4 and ax == ex and ey < ay:
-                self.enemies_alive[i] = 0
-                reward += 30
+        while 0 <= x < self.grid_size and 0 <= y < self.grid_size:
+            current_pos = (x, y)
 
-            elif action == 5 and ax == ex and ey > ay:
-                self.enemies_alive[i] = 0
-                reward += 30
+        # Bullet stops when it hits an obstacle
+            if current_pos in self.obstacles:
+                break
 
-            elif action == 6 and ay == ey and ex < ax:
-                self.enemies_alive[i] = 0
-                reward += 30
+        # Bullet kills first living enemy in its path
+            if current_pos in self.enemy_positions:
+                enemy_index = self.enemy_positions.index(current_pos)
 
-            elif action == 7 and ay == ey and ex > ax:
-                self.enemies_alive[i] = 0
-                reward += 30
+                if self.enemies_alive[enemy_index] == 1:
+                    self.enemies_alive[enemy_index] = 0
+                    reward += 30
+                    break
+
+            x += dx
+            y += dy
 
         return reward
 
