@@ -2,7 +2,8 @@ import random
 import numpy as np
 from env.dungeon_env import DungeonEnv
 import matplotlib.pyplot as plt
-
+import pickle
+import os
 
 env = DungeonEnv()
 
@@ -68,6 +69,13 @@ for episode in range(episodes):
 
 
 print("Training finished.")
+
+os.makedirs("models", exist_ok=True)
+
+with open("models/q_table.pkl", "wb") as file:
+    pickle.dump(q_table, file)
+
+print("Q-table saved to models/q_table.pkl")
 
 plt.plot(episode_rewards)
 plt.xlabel("Episodes")
