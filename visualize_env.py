@@ -8,6 +8,8 @@ WIDTH = CELL_SIZE * GRID_SIZE
 HEIGHT = CELL_SIZE * GRID_SIZE
 
 pygame.init()
+font = pygame.font.SysFont("arial", 24)
+big_font = pygame.font.SysFont("arial", 42, bold=True)
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Dungeon RL Environment")
 clock = pygame.time.Clock()
@@ -122,9 +124,56 @@ def draw_bullet(action):
         x += dx
         y += dy
 
+def draw_text(text, x, y, color=(20, 20, 20), large=False):
+    selected_font = big_font if large else font
+    surface = selected_font.render(text, True, color)
+    screen.blit(surface, (x, y))
+
+
+def draw_hud(episode, total_reward, steps):
+    enemies_left = sum(env.enemies_alive)
+
+    draw_text(f"Episode: {episode}", 10, 10)
+    draw_text(f"Reward: {total_reward}", 10, 35)
+    draw_text(f"Steps: {steps}", 10, 60)
+    draw_text(f"Enemies left: {enemies_left}", 10, 85)
+
+
+def draw_end_message(message):
+    overlay = pygame.Surface((WIDTH, HEIGHT))
+    overlay.set_alpha(170)
+    overlay.fill((0, 0, 0))
+    screen.blit(overlay, (0, 0))
+
+    text_surface = big_font.render(message, True, (255, 255, 255))
+    text_rect = text_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+    screen.blit(text_surface, text_rect)
+    pygame.display.flip()
+
+def draw_explosion(x, y):
+    center = (
+        x * CELL_SIZE + CELL_SIZE // 2,
+        y * CELL_SIZE + CELL_SIZE // 2
+    )
+
+    for radius in [10, 20, 30]:
+        draw_grid()
+        pygame.draw.circle(screen, (255, 120, 0), center, radius)
+        pygame.draw.circle(screen, (255, 220, 0), center, radius // 2)
+
+        draw_hud(episode, total_reward, steps)
+        pygame.display.flip()
+        pygame.time.delay(120)
+
 
 last_action = None
 running = True
+
+episode = 1
+total_reward = 0
+steps = 0
+end_message = ""
+
 
 while running:
     for event in pygame.event.get():
@@ -132,20 +181,53 @@ while running:
             running = False
 
     if not done:
-        last_action = random.randint(0, 7)
-        state, reward, done, _, _ = env.step(last_action)
-    else:
-        pygame.time.delay(1000)
-        state, _ = env.reset()
-        done = False
-        last_action = None
+        action = random.randint(0, 7)  # for visualize_env.py
 
-    draw_grid()
+        old_enemies_alive = env.enemies_alive.copy()
 
-    if last_action is not None:
-        draw_bullet(last_action)
+        state, reward, done, _, _ = env.step(action)
 
-    pygame.display.flip()
+        total_reward += reward
+        steps += 1
+        last_action = action
+
+        draw_grid()
+
+        if last_action is not None:
+            draw_bullet(last_action)
+
+        draw_hud(episode, total_reward, steps)
+        pygame.display.flip()
+        pygame.time.delay(180)
+        
+        # Monster death explosion
+        for i, alive_before in enumerate(old_enemies_alive):
+            if alive_before == 1 and env.enemies_alive[i] == 0:
+                ex, ey = env.enemy_positions[i]
+                draw_explosion(ex, ey)
+
+        # Robot death explosion
+        if done and sum(env.enemies_alive) > 0:
+            ax, ay = env.agent_pos
+            draw_explosion(ax, ay)
+
+        # End message + reset
+        if done:
+            if sum(env.enemies_alive) == 0:
+                end_message = "ROOM CLEARED!"
+            else:
+                end_message = "ROBOT DESTROYED!"
+
+            draw_end_message(end_message)
+            pygame.time.delay(1200)
+
+            episode += 1
+            total_reward = 0
+            steps = 0
+            state, _ = env.reset()
+            done = False
+            last_action = None
+
     clock.tick(2)
 
 pygame.quit()
