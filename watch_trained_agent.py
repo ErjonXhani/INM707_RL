@@ -3,8 +3,8 @@ import pygame
 import numpy as np
 from env.dungeon_env import DungeonEnv
 
-CELL_SIZE = 80
-GRID_SIZE = 6
+CELL_SIZE = 70
+GRID_SIZE = 8
 WIDTH = CELL_SIZE * GRID_SIZE
 HEIGHT = CELL_SIZE * GRID_SIZE
 
@@ -72,51 +72,37 @@ def draw_bullet(action):
 
     ax, ay = env.agent_pos
 
-    if action == 4:      # up
+    if action == 4:
         dx, dy = 0, -1
-    elif action == 5:    # down
+    elif action == 5:
         dx, dy = 0, 1
-    elif action == 6:    # left
+    elif action == 6:
         dx, dy = -1, 0
-    else:                # right
+    else:
         dx, dy = 1, 0
 
     x = ax + dx
     y = ay + dy
 
-    start = (
-        ax * CELL_SIZE + CELL_SIZE // 2,
-        ay * CELL_SIZE + CELL_SIZE // 2
-    )
-
-    end = start
-
     while 0 <= x < GRID_SIZE and 0 <= y < GRID_SIZE:
         current_pos = (x, y)
 
-        # stop bullet visually at obstacle
         if current_pos in env.obstacles:
-            end = (
-                x * CELL_SIZE + CELL_SIZE // 2,
-                y * CELL_SIZE + CELL_SIZE // 2
-            )
             break
 
-        end = (
+        bullet_center = (
             x * CELL_SIZE + CELL_SIZE // 2,
             y * CELL_SIZE + CELL_SIZE // 2
         )
 
-        # stop visually if it hits a living enemy
+        pygame.draw.circle(screen, (255, 200, 0), bullet_center, 7)
+
+        # stop at monster coordinate, even if it has just been killed
         if current_pos in env.enemy_positions:
-            enemy_index = env.enemy_positions.index(current_pos)
-            if env.enemies_alive[enemy_index] == 1:
-                break
+            break
 
         x += dx
         y += dy
-
-    pygame.draw.line(screen, (255, 200, 0), start, end, 5)
 
 
 def draw_grid():

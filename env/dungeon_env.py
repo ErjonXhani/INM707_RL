@@ -8,22 +8,30 @@ class DungeonEnv(gym.Env):
     def __init__(self):
         super().__init__()
 
-        self.grid_size = 6
-        self.max_steps = 50
-
-        # 0 up, 1 down, 2 left, 3 right, 4 shoot up, 5 shoot down, 6 shoot left, 7 shoot right
+        self.grid_size = 8
+        self.max_steps = 80
         self.action_space = spaces.Discrete(8)
 
-        # State: agent_x, agent_y, enemy1_alive, enemy2_alive
+        # State: agent_x, agent_y, enemy1_alive, enemy2_alive, enemy3_alive, enemy4_alive, enemy5_alive
         self.observation_space = spaces.Box(
             low=0,
-            high=6,
-            shape=(4,),
+            high=8,
+            shape=(7,),
             dtype=np.int32
         )
 
-        self.obstacles = [(1, 1), (1, 2), (3, 3)]
-        self.enemy_positions = [(4, 4), (2, 5)]
+        self.obstacles = [
+            (1, 1), (1, 2), (3, 3), (4, 3),
+            (6, 1), (2, 6), (5, 5), (6, 6)
+        ]
+
+        self.enemy_positions = [
+            (7, 7),
+            (2, 5),
+            (6, 4),
+            (4, 1),
+            (0, 6)
+        ]
 
         self.reset()
 
@@ -38,7 +46,7 @@ class DungeonEnv(gym.Env):
         ]
 
         self.agent_pos = random.choice(possible_spawns)
-        self.enemies_alive = [1, 1]
+        self.enemies_alive = [1 for _ in self.enemy_positions]
         self.steps = 0
 
         return self._get_state(), {}
@@ -47,8 +55,7 @@ class DungeonEnv(gym.Env):
         return np.array([
             self.agent_pos[0],
             self.agent_pos[1],
-            self.enemies_alive[0],
-            self.enemies_alive[1]
+            *self.enemies_alive
         ], dtype=np.int32)
 
     def step(self, action):
