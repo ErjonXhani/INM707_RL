@@ -62,30 +62,35 @@ class DungeonEnv(gym.Env):
         self.steps += 1
         reward = -1
         done = False
+        result = "running"
 
         if action in [0, 1, 2, 3]:
             reward += self._move(action)
 
         elif action in [4, 5, 6, 7]:
             reward += self._shoot(action)
-        
-        # death condition
 
+        # death by enemy collision
         if self.agent_pos in self.enemy_positions:
             enemy_index = self.enemy_positions.index(self.agent_pos)
 
             if self.enemies_alive[enemy_index] == 1:
                 reward -= 100
                 done = True
+                result = "dead"
 
+        # room cleared
         if sum(self.enemies_alive) == 0:
             reward += 100
             done = True
+            result = "cleared"
 
-        if self.steps >= self.max_steps:
+        # time limit
+        if self.steps >= self.max_steps and not done:
             done = True
+            result = "timeout"
 
-        return self._get_state(), reward, done, False, {}
+        return self._get_state(), reward, done, False, {"result": result}
 
     def _move(self, action):
         x, y = self.agent_pos

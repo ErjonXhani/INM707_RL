@@ -5,7 +5,11 @@ from env.dungeon_env import DungeonEnv
 
 CELL_SIZE = 70
 GRID_SIZE = 8
-WIDTH = CELL_SIZE * GRID_SIZE
+
+GRID_WIDTH = CELL_SIZE * GRID_SIZE
+PANEL_WIDTH = 220
+
+WIDTH = GRID_WIDTH + PANEL_WIDTH
 HEIGHT = CELL_SIZE * GRID_SIZE
 
 pygame.init()
@@ -108,21 +112,32 @@ def draw_bullet(action):
 
 
 def draw_grid():
-    screen.fill((240, 240, 240))
+    screen.fill((25, 25, 30))
 
+    # floor tiles
     for y in range(GRID_SIZE):
         for x in range(GRID_SIZE):
             rect = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
-            pygame.draw.rect(screen, (200, 200, 200), rect, 1)
 
+            if (x + y) % 2 == 0:
+                pygame.draw.rect(screen, (55, 55, 65), rect)
+            else:
+                pygame.draw.rect(screen, (48, 48, 58), rect)
+
+            pygame.draw.rect(screen, (80, 80, 90), rect, 1)
+
+    # obstacles as wall blocks
     for ox, oy in env.obstacles:
-        rect = pygame.Rect(ox * CELL_SIZE, oy * CELL_SIZE, CELL_SIZE, CELL_SIZE)
-        pygame.draw.rect(screen, (80, 80, 80), rect)
+        rect = pygame.Rect(ox * CELL_SIZE + 4, oy * CELL_SIZE + 4, CELL_SIZE - 8, CELL_SIZE - 8)
+        pygame.draw.rect(screen, (95, 95, 105), rect, border_radius=6)
+        pygame.draw.rect(screen, (45, 45, 55), rect, 3, border_radius=6)
 
+    # enemies
     for i, (ex, ey) in enumerate(env.enemy_positions):
         if env.enemies_alive[i] == 1:
             draw_monster(ex, ey)
 
+    # agent
     ax, ay = env.agent_pos
     draw_robot(ax, ay)
 
@@ -133,23 +148,45 @@ def draw_text(text, x, y, color=(20, 20, 20), large=False):
 
 
 def draw_hud(episode, total_reward, steps):
+    panel_x = GRID_WIDTH
+
+    panel_rect = pygame.Rect(panel_x, 0, PANEL_WIDTH, HEIGHT)
+    pygame.draw.rect(screen, (35, 35, 42), panel_rect)
+
+    pygame.draw.line(screen, (120, 120, 130), (panel_x, 0), (panel_x, HEIGHT), 3)
+
     enemies_left = sum(env.enemies_alive)
 
-    draw_text(f"Episode: {episode}", 10, 10)
-    draw_text(f"Reward: {total_reward}", 10, 35)
-    draw_text(f"Steps: {steps}", 10, 60)
-    draw_text(f"Enemies left: {enemies_left}", 10, 85)
+    draw_text("RL AGENT", panel_x + 25, 30, color=(255, 255, 255), large=True)
+
+    draw_text(f"Episode:", panel_x + 25, 110, color=(180, 180, 190))
+    draw_text(str(episode), panel_x + 25, 140, color=(255, 255, 255))
+
+    draw_text(f"Reward:", panel_x + 25, 190, color=(180, 180, 190))
+    draw_text(str(total_reward), panel_x + 25, 220, color=(255, 220, 120))
+
+    draw_text(f"Steps:", panel_x + 25, 270, color=(180, 180, 190))
+    draw_text(str(steps), panel_x + 25, 300, color=(255, 255, 255))
+
+    draw_text(f"Enemies left:", panel_x + 25, 350, color=(180, 180, 190))
+    draw_text(str(enemies_left), panel_x + 25, 380, color=(255, 120, 120))
 
 
 def draw_end_message(message):
-    overlay = pygame.Surface((WIDTH, HEIGHT))
-    overlay.set_alpha(170)
+    overlay = pygame.Surface((GRID_WIDTH, HEIGHT))
+    overlay.set_alpha(180)
     overlay.fill((0, 0, 0))
     screen.blit(overlay, (0, 0))
 
-    text_surface = big_font.render(message, True, (255, 255, 255))
-    text_rect = text_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+    if message == "ROOM CLEARED!":
+        color = (120, 255, 150)
+    else:
+        color = (255, 100, 100)
+
+    text_surface = big_font.render(message, True, color)
+    text_rect = text_surface.get_rect(center=(GRID_WIDTH // 2, HEIGHT // 2))
     screen.blit(text_surface, text_rect)
+
     pygame.display.flip()
 
 def draw_explosion(x, y):
@@ -189,7 +226,7 @@ while running:
 
         old_enemies_alive = env.enemies_alive.copy()
 
-        state, reward, done, _, _ = env.step(action)
+        state, reward, done, _, info = env.step(action)
 
         total_reward += reward
         steps += 1
@@ -217,10 +254,14 @@ while running:
 
         # End message + reset
         if done:
-            if sum(env.enemies_alive) == 0:
+            if info["result"] == "cleared":
                 end_message = "ROOM CLEARED!"
-            else:
+            elif info["result"] == "dead":
                 end_message = "ROBOT DESTROYED!"
+            elif info["result"] == "timeout":
+                end_message = "TIME OUT!"
+            else:
+                end_message = "EPISODE ENDED!"
 
             draw_end_message(end_message)
             pygame.time.delay(1200)
@@ -232,6 +273,6 @@ while running:
             done = False
             last_action = None
 
-    clock.tick(2)
+    clock.tick(3)
 
 pygame.quit()
