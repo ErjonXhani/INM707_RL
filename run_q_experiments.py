@@ -9,6 +9,10 @@ def state_to_key(state):
     return tuple(state.tolist())
 
 
+def moving_average(values, window=100):
+    return np.convolve(values, np.ones(window) / window, mode="valid")
+
+
 def train_q_learning(alpha, gamma, epsilon_decay, episodes=2000):
     env = DungeonEnv()
 
@@ -18,7 +22,7 @@ def train_q_learning(alpha, gamma, epsilon_decay, episodes=2000):
     q_table = {}
     episode_rewards = []
     episode_lengths = []
-    success_count = 0
+    episode_successes = []
 
     def get_q_values(state):
         key = state_to_key(state)
@@ -34,7 +38,7 @@ def train_q_learning(alpha, gamma, epsilon_decay, episodes=2000):
 
         total_reward = 0
         steps = 0
-        cleared_room = False
+        result = "running"
 
         while not done:
             q_values = get_q_values(state)
@@ -44,7 +48,7 @@ def train_q_learning(alpha, gamma, epsilon_decay, episodes=2000):
             else:
                 action = int(np.argmax(q_values))
 
-            next_state, reward, done, _, _ = env.step(action)
+            next_state, reward, done, _, info = env.step(action)
             next_q_values = get_q_values(next_state)
 
             q_values[action] = q_values[action] + alpha * (
@@ -55,20 +59,15 @@ def train_q_learning(alpha, gamma, epsilon_decay, episodes=2000):
             total_reward += reward
             steps += 1
 
-            if sum(env.enemies_alive) == 0:
-                cleared_room = True
-
-        if cleared_room:
-            success_count += 1
+            result = info["result"]
 
         epsilon = max(epsilon_min, epsilon * epsilon_decay)
 
         episode_rewards.append(total_reward)
         episode_lengths.append(steps)
+        episode_successes.append(1 if result == "cleared" else 0)
 
-    success_rate = success_count / episodes
-
-    return episode_rewards, episode_lengths, success_rate
+    return episode_rewards, episode_lengths, episode_successes
 
 
 experiments = {
@@ -97,44 +96,80 @@ experiments = {
 
 os.makedirs("results", exist_ok=True)
 
-summary_results = {}
-
-plt.figure(figsize=(12, 7))
+all_results = {}
 
 for name, params in experiments.items():
     print(f"Running experiment: {name}")
 
-    rewards, lengths, success_rate = train_q_learning(
+    rewards, lengths, successes = train_q_learning(
         alpha=params["alpha"],
         gamma=params["gamma"],
         epsilon_decay=params["epsilon_decay"]
     )
 
-    moving_average = np.convolve(rewards, np.ones(100) / 100, mode="valid")
-
-    plt.plot(moving_average, label=name)
-
-    summary_results[name] = {
-        "final_average_reward": np.mean(rewards[-100:]),
-        "average_episode_length": np.mean(lengths[-100:]),
-        "success_rate": success_rate
+    all_results[name] = {
+        "rewards": rewards,
+        "lengths": lengths,
+        "successes": successes
     }
+
+
+# Reward plot
+plt.figure(figsize=(12, 7))
+
+for name, results in all_results.items():
+    plt.plot(moving_average(results["rewards"]), label=name)
 
 plt.xlabel("Episode")
 plt.ylabel("Average Reward over 100 Episodes")
-plt.title("Q-learning Parameter Experiment Comparison")
+plt.title("Q-learning Reward Comparison")
 plt.legend()
 plt.grid(True)
-plt.savefig("results/q_learning_experiment_comparison.png")
+plt.savefig("results/q_learning_reward_comparison.png")
+plt.show()
+
+
+# Episode length plot
+plt.figure(figsize=(12, 7))
+
+for name, results in all_results.items():
+    plt.plot(moving_average(results["lengths"]), label=name)
+
+plt.xlabel("Episode")
+plt.ylabel("Average Episode Length over 100 Episodes")
+plt.title("Q-learning Episode Length Comparison")
+plt.legend()
+plt.grid(True)
+plt.savefig("results/q_learning_episode_length_comparison.png")
+plt.show()
+
+
+# Success rate plot
+plt.figure(figsize=(12, 7))
+
+for name, results in all_results.items():
+    success_rate = moving_average(results["successes"]) * 100
+    plt.plot(success_rate, label=name)
+
+plt.xlabel("Episode")
+plt.ylabel("Room Clear Success Rate (%) over 100 Episodes")
+plt.title("Q-learning Success Rate Comparison")
+plt.legend()
+plt.grid(True)
+plt.savefig("results/q_learning_success_rate_comparison.png")
 plt.show()
 
 
 print("\nExperiment Summary")
 print("------------------")
 
-for name, results in summary_results.items():
+for name, results in all_results.items():
+    final_avg_reward = np.mean(results["rewards"][-100:])
+    final_avg_length = np.mean(results["lengths"][-100:])
+    final_success_rate = np.mean(results["successes"][-100:]) * 100
+
     print(name)
-    print(f"Final average reward: {results['final_average_reward']:.2f}")
-    print(f"Average episode length: {results['average_episode_length']:.2f}")
-    print(f"Success rate: {results['success_rate'] * 100:.2f}%")
+    print(f"Final average reward: {final_avg_reward:.2f}")
+    print(f"Final average episode length: {final_avg_length:.2f}")
+    print(f"Final success rate: {final_success_rate:.2f}%")
     print()
