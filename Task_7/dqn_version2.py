@@ -16,7 +16,7 @@ np.random.seed(RANDOM_SEED)
 # Screen dimensions
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
-FPS = 144
+FPS = 0
 
 # Game States
 GAME_STATE_PLAYING = "PLAYING"
