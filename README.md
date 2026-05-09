@@ -6,7 +6,7 @@ Coursework project for INM707: Deep Reinforcement Learning at City St Georges, U
 1) To create an envirnoment, defining its state transition function, setting and running Q-Learning algorithm, and Analyze it quantitatively and qualitatively.
 2) To create an advanced envirnoment and implement Deep Q Learning with two improvements, and a Deep Reinforcement Learning Technique each. And then Analysing the results quantitatively and qualitatively.
 
-Envirnoment Inspiration: https://store.steampowered.com/app/250900/The_Binding_of_Isaac_Rebirth/
+Environment Inspiration: https://store.steampowered.com/app/250900/The_Binding_of_Isaac_Rebirth/
 
 <img width="1211" height="680" alt="image" src="https://github.com/user-attachments/assets/98f287ce-02a4-4af1-a224-ac839855a22b" />
 The above is a screenshot from the game we took inspiration from.
@@ -36,7 +36,7 @@ For all the algorithms in Advanced_Task and Individual_Task, we shall not be loa
 
 ## Base_Task
 
-Contains all the code, checkpoints and results from the Basic Task covering Tasks 1,2,3,4,5, and 6.
+Contains all the code, results and graphs from the Basic Task covering Tasks 1,2,3,4,5, and 6.
 
 Code contains implementation of Q-Learning
 
@@ -44,11 +44,16 @@ Code contains implementation of Q-Learning
 The above is a screenshot of the envirnoment used for the basic task.
 
 python env/dungeon_env.py --> to create the environment
+
 python q_learning.py --> trains Q-table and saves models/q_table.pkl
+
 python visualize_env.py --> to visualize training, with random actions
+
 python watched_trained_agent.py --> loads q_table.pkl and visualizes learned behavior
+
 python run_q_experiments.py --> runs different experiments with different configurations and saves graphs at results/.
-python test_env.py and python watch_agent.py --> used only for environment testing and functioning purposes.
+
+python test_env.py & python watch_agent.py --> used only for environment testing and functioning purposes.
 
 ## Advanced_Task
 
@@ -56,8 +61,16 @@ Contains all the code, and checkpoints from the Advanced Task covering Task 7 an
 
 Code contains implementaiton of Deep Q Learning, Double Deep Q Learning, and Double Deep Q Learning with Prioritized Experience Replay.
 
+To run any model:
+
+python [model_name].py train number  --> training on [number] of episodes
+
+python [model_name].py inference number --> testing and visualizing for [number] of episodes
+
 ## Individual_Task
 
 Contains all the code, and checkpoints from the Advanced Task covering Task 9 and 10.
 
 Code contains implementation of Proximal Policy Optimization (PPO) by Erjon, and Advantage Actor-Critic (A2C) by Badri.
+
+To run the file on training or inference, follow the same instructions as in the advanced task.
