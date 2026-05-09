@@ -20,7 +20,7 @@ Download all requirements from requirements.txt
 ## Running the code
 
 1) All code are stored in .py file. Hence the general code to run them is to first navigate the respective directory and run the following: ``` !python [filename].py ```
-2) Some codes have specfic arguments to pass, whose instructions are in their respective readme file in the respective files.
+2) Some codes have specfic arguments to pass, whose instructions are in their respective readme file in the respective folders.
 
 
 # File Structure
@@ -43,17 +43,6 @@ Code contains implementation of Q-Learning
 <img width="420" height="300" alt="image" src="https://github.com/user-attachments/assets/b322854d-3dea-4257-a270-2384fd89782b" />
 The above is a screenshot of the envirnoment used for the basic task.
 
-python env/dungeon_env.py --> to create the environment
-
-python q_learning.py --> trains Q-table and saves models/q_table.pkl
-
-python visualize_env.py --> to visualize training, with random actions
-
-python watched_trained_agent.py --> loads q_table.pkl and visualizes learned behavior
-
-python run_q_experiments.py --> runs different experiments with different configurations and saves graphs at results/.
-
-python test_env.py & python watch_agent.py --> used only for environment testing and functioning purposes.
 
 ## Advanced_Task
 
@@ -61,11 +50,6 @@ Contains all the code, and checkpoints from the Advanced Task covering Task 7 an
 
 Code contains implementaiton of Deep Q Learning, Double Deep Q Learning, and Double Deep Q Learning with Prioritized Experience Replay.
 
-To run any model:
-
-python [model_name].py train number  --> training on [number] of episodes
-
-python [model_name].py inference number --> testing and visualizing for [number] of episodes
 
 ## Individual_Task
 
