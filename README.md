@@ -27,7 +27,7 @@ Download all requirements from requirements.txt
 
 ## Game
 
-Contains all the code and assests for a full playable envirnoment. (Pls do not there are some issues with level of audio, so do enter the enter with reduced global volume)
+Contains all the code and assests for a full playable envirnoment. ( We recommend you to run it with reduced volume, there are some issues with the level of audio :))
 
 <img width="1208" height="951" alt="image" src="https://github.com/user-attachments/assets/d66d2c4c-92de-4cea-99b3-366c655d1fb6" />
 THe above is a screenshot from our game.
@@ -41,7 +41,14 @@ Contains all the code, checkpoints and results from the Basic Task covering Task
 Code contains implementation of Q-Learning
 
 <img width="420" height="300" alt="image" src="https://github.com/user-attachments/assets/b322854d-3dea-4257-a270-2384fd89782b" />
-The above is a screenshot of the envirnoment used for the basic task
+The above is a screenshot of the envirnoment used for the basic task.
+
+python env/dungeon_env.py --> to create the environment
+python q_learning.py --> trains Q-table and saves models/q_table.pkl
+python visualize_env.py --> to visualize training, with random actions
+python watched_trained_agent.py --> loads q_table.pkl and visualizes learned behavior
+python run_q_experiments.py --> runs different experiments with different configurations and saves graphs at results/.
+python test_env.py and python watch_agent.py --> used only for environment testing and functioning purposes.
 
 ## Advanced_Task
 
